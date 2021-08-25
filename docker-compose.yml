@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: default
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+
+  www:
+    hostname: www
+    restart: always
+    build:
+      context: .
+    ports:
+      - 80:80
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - mysql

@@ -1,0 +1,68 @@
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server ipv6only=on;
+
+  server_name localhost;
+
+  set $base /var/www/html;
+  root $base;
+
+  add_header X-Frame-Options "SAMEORIGIN" always;
+  add_header X-XSS-Protection "1; mode=block" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header Referrer-Policy "no-referrer-when-downgrade" always;
+  #add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+
+  charset utf-8;
+
+  client_max_body_size 512M;
+
+  location ~ /\.(?!well-known) {
+    deny all;
+  }
+
+  index index.php index.html;
+
+  location / {
+    autoindex on;
+    try_files $uri /index.php?$query_string;
+  }
+
+  location ~ .php$ {
+    autoindex on;
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+    fastcgi_index index.php;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_param PATH_INFO $fastcgi_path_info;
+    fastcgi_read_timeout 86400;
+  }
+
+  location = /favicon.ico {
+    log_not_found off;
+    access_log off;
+  }
+
+  location = /robots.txt {
+    log_not_found off;
+    access_log off;
+  }
+
+  location ~* \.(?:css(\.map)?|js(\.map)?|jpe?g|png|gif|ico|cur|heic|webp|tiff?|mp3|m4a|aac|ogg|midi?|wav|mp4|mov|webm|mpe?g|avi|ogv|flv|wmv)$ {
+    expires 30d;
+    access_log off;
+  }
+
+  location ~* \.(?:svgz?|ttf|ttc|otf|eot|woff2?)$ {
+    add_header Access-Control-Allow-Origin "*";
+    expires 30d;
+    access_log off;
+  }
+
+  gzip on;
+  gzip_vary on;
+  gzip_proxied any;
+  gzip_comp_level 6;
+  gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
+}
